@@ -13,10 +13,7 @@ final class MovieQuizViewController: UIViewController {
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Show question
-        let question = questions[currentQuestionIndex]
-        let model = convert(model: question)
-        show(quiz: model)
+        showQuestion()
     }
     
     private let questions: [QuizQuestion] = [
@@ -42,7 +39,7 @@ final class MovieQuizViewController: UIViewController {
         showAnswerResult(isCorrect: !question.correctAnswer)
     }
    
-    // Convert question to viewModel
+    // Преобразуем структуру запроса во view model
     private func convert(model: QuizQuestion) -> QuizStepViewModel {
         return QuizStepViewModel(
             image: UIImage(named: model.image) ?? UIImage(),
@@ -50,7 +47,7 @@ final class MovieQuizViewController: UIViewController {
             questionNumber: "\(currentQuestionIndex + 1)/\(questions.count)")
     }
     
-    // Show question and image
+    // Показываем вопрос и изображение
     private func show(quiz step: QuizStepViewModel) {
         imageView.image = step.image
         textLabel.text = step.question
@@ -58,7 +55,10 @@ final class MovieQuizViewController: UIViewController {
     }
     
     private func showAnswerResult(isCorrect: Bool) {
+        // Показываем рамку
         imageView.layer.borderWidth = 8
+        
+        // Блокируем кнопки
         yesButton.isEnabled = false
         noButton.isEnabled = false
         
@@ -77,7 +77,10 @@ final class MovieQuizViewController: UIViewController {
     }
     
     private func showNextQuestionOrResults() {
+        // Скрываем рамку
         imageView.layer.borderWidth = 0
+        
+        // Включаем кнопки
         yesButton.isEnabled = true
         noButton.isEnabled = true
         
@@ -88,15 +91,11 @@ final class MovieQuizViewController: UIViewController {
                 buttonText: "Сыграть ещё раз"))
         } else {
             currentQuestionIndex += 1
-            // Show question
-            let question = questions[currentQuestionIndex]
-            let model = convert(model: question)
-            show(quiz: model)
+            showQuestion()
         }
     }
     
     private func show(quiz result: QuizResultsViewModel) {
-        // попробуйте написать код создания и показа алерта с результатами
         let alert = UIAlertController(
             title: result.title,
             message: result.text,
@@ -107,15 +106,20 @@ final class MovieQuizViewController: UIViewController {
             
             // сбрасываем переменную с количеством правильных ответов
             self.correctAnswer = 0
-            // Show question
-            let question = self.questions[self.currentQuestionIndex]
-            let model = self.convert(model: question)
-            self.show(quiz: model)
+            
+            self.showQuestion()
         }
         
         alert.addAction(action)
 
         self.present(alert, animated: true, completion: nil)
+    }
+    
+    // показывает текущий вопрос
+    private func showQuestion() {
+        let question = questions[currentQuestionIndex]
+        let model = convert(model: question)
+        show(quiz: model)
     }
 }
 
@@ -125,13 +129,14 @@ private struct QuizQuestion {
     let correctAnswer: Bool // правильный ответ на вопрос
 }
 
+// view model для состояния "вопрос показан"
 private struct QuizStepViewModel {
     let image: UIImage
     let question: String
     let questionNumber: String
 }
 
-// для состояния "Результат квиза"
+// view model для состояния "результат квиза"
 private struct QuizResultsViewModel {
   // строка с заголовком алерта
   let title: String
