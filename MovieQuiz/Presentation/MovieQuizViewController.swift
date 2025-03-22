@@ -11,6 +11,7 @@ final class MovieQuizViewController: UIViewController {
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
+        // Show question
         let question = questions[currentQuestionIndex]
         let model = convert(model: question)
         show(quiz: model)
@@ -30,10 +31,16 @@ final class MovieQuizViewController: UIViewController {
     ]
     
     @IBAction private func yesButtonClicked(_ sender: Any) {
+        let question = questions[currentQuestionIndex]
+        showAnswerResult(isCorrect: question.correctAnswer)
     }
+    
     @IBAction private func noButtonClicked(_ sender: Any) {
+        let question = questions[currentQuestionIndex]
+        showAnswerResult(isCorrect: !question.correctAnswer)
     }
    
+    // Convert question to viewModel
     private func convert(model: QuizQuestion) -> QuizStepViewModel {
         return QuizStepViewModel(
             image: UIImage(named: model.image) ?? UIImage(),
@@ -41,10 +48,68 @@ final class MovieQuizViewController: UIViewController {
             questionNumber: "\(currentQuestionIndex + 1)/\(questions.count)")
     }
     
+    // Show question and image
     private func show(quiz step: QuizStepViewModel) {
         imageView.image = step.image
         textLabel.text = step.question
         counterLabel.text = step.questionNumber
+    }
+    
+    private func showAnswerResult(isCorrect: Bool) {
+        imageView.layer.masksToBounds = true
+        imageView.layer.borderWidth = 8
+        imageView.layer.cornerRadius = 6
+        
+        if isCorrect {
+            imageView.layer.borderColor = UIColor.ypGreen.cgColor
+            correctAnswer += 1
+        } else {
+            imageView.layer.borderColor = UIColor.ypRed.cgColor
+        }
+        
+        // запускаем задачу через 1 секунду c помощью диспетчера задач
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+           // код, который мы хотим вызвать через 1 секунду
+           self.showNextQuestionOrResults()
+        }
+    }
+    
+    private func showNextQuestionOrResults() {
+        if currentQuestionIndex == questions.count - 1 {
+            show(quiz: QuizResultsViewModel(
+                title: "Этот раунд окончен",
+                text: "Ваш результат \(correctAnswer)/\(questions.count)",
+                buttonText: "Сыграть ещё раз"))
+        } else {
+            currentQuestionIndex += 1
+            // Show question
+            let question = questions[currentQuestionIndex]
+            let model = convert(model: question)
+            show(quiz: model)
+        }
+    }
+    
+    private func show(quiz result: QuizResultsViewModel) {
+        // попробуйте написать код создания и показа алерта с результатами
+        let alert = UIAlertController(
+            title: result.title,
+            message: result.text,
+            preferredStyle: .alert)
+        
+        let action = UIAlertAction(title: result.buttonText, style: .default) { _ in
+            self.currentQuestionIndex = 0
+            
+            // сбрасываем переменную с количеством правильных ответов
+            self.correctAnswer = 0
+            // Show question
+            let question = self.questions[self.currentQuestionIndex]
+            let model = self.convert(model: question)
+            self.show(quiz: model)
+        }
+        
+        alert.addAction(action)
+
+        self.present(alert, animated: true, completion: nil)
     }
 }
 
@@ -59,6 +124,17 @@ struct QuizStepViewModel {
     let question: String
     let questionNumber: String
 }
+
+// для состояния "Результат квиза"
+struct QuizResultsViewModel {
+  // строка с заголовком алерта
+  let title: String
+  // строка с текстом о количестве набранных очков
+  let text: String
+  // текст для кнопки алерта
+  let buttonText: String
+}
+
 /*
  Mock-данные
  
