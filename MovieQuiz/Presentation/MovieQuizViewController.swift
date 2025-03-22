@@ -4,6 +4,8 @@ final class MovieQuizViewController: UIViewController {
     @IBOutlet weak private var imageView: UIImageView!
     @IBOutlet weak private var textLabel: UILabel!
     @IBOutlet weak private var counterLabel: UILabel!
+    @IBOutlet weak private var noButton: UIButton!
+    @IBOutlet weak private var yesButton: UIButton!
     
     private var currentQuestionIndex = 0
     private var correctAnswer = 0
@@ -56,9 +58,9 @@ final class MovieQuizViewController: UIViewController {
     }
     
     private func showAnswerResult(isCorrect: Bool) {
-        imageView.layer.masksToBounds = true
         imageView.layer.borderWidth = 8
-        imageView.layer.cornerRadius = 6
+        yesButton.isEnabled = false
+        noButton.isEnabled = false
         
         if isCorrect {
             imageView.layer.borderColor = UIColor.ypGreen.cgColor
@@ -75,6 +77,10 @@ final class MovieQuizViewController: UIViewController {
     }
     
     private func showNextQuestionOrResults() {
+        imageView.layer.borderWidth = 0
+        yesButton.isEnabled = true
+        noButton.isEnabled = true
+        
         if currentQuestionIndex == questions.count - 1 {
             show(quiz: QuizResultsViewModel(
                 title: "Этот раунд окончен",
@@ -113,20 +119,20 @@ final class MovieQuizViewController: UIViewController {
     }
 }
 
-struct QuizQuestion {
+private struct QuizQuestion {
     let image: String // строка с названием фильма (название картинки афиши в ассетс)
     let text: String // строка с вопросом про рейтинг
     let correctAnswer: Bool // правильный ответ на вопрос
 }
 
-struct QuizStepViewModel {
+private struct QuizStepViewModel {
     let image: UIImage
     let question: String
     let questionNumber: String
 }
 
 // для состояния "Результат квиза"
-struct QuizResultsViewModel {
+private struct QuizResultsViewModel {
   // строка с заголовком алерта
   let title: String
   // строка с текстом о количестве набранных очков
