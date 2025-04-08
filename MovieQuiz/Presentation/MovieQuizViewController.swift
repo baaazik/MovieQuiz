@@ -13,14 +13,16 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     private var questionFactory: QuestionFactoryProtocol?
     private var currentQuestion: QuizQuestion?
     private var alertPresenter: AlertPresenter?
+    private var statisticService: StatisticServiceProtocol?
 
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
         questionFactory = QuestionFactory(delegate: self)
-        questionFactory?.requestNextQuestion()
-
         alertPresenter = AlertPresenter(controller: self)
+        statisticService = StatisticService()
+
+        questionFactory?.requestNextQuestion()
     }
 
     // MARK: - QuestionFactoryDelegate
@@ -91,9 +93,24 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         noButton.isEnabled = true
         
         if currentQuestionIndex == questionsAmount - 1 {
+            statisticService?.store(correct: correctAnswer, total: questionsAmount)
+
+            var text = "Ваш результат \(correctAnswer)/\(questionsAmount)"
+
+            if let statisticService {
+                let bestGame = statisticService.bestGame
+                text += """
+
+Количество сыгранных квизов: \(statisticService.gamesCount)
+Рекорд: \(bestGame.correct)/\(bestGame.total) (\(bestGame.date.dateTimeString))
+Средняя точность: \(String(format: "%.2f", statisticService.totalAccuracy))%
+"""
+
+            }
+
             show(quiz: QuizResultsViewModel(
-                title: "Этот раунд окончен",
-                text: "Ваш результат \(correctAnswer)/\(questionsAmount)",
+                title: "Этот раунд окончен!",
+                text: text,
                 buttonText: "Сыграть ещё раз"))
         } else {
             currentQuestionIndex += 1
@@ -104,7 +121,6 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     private func show(quiz result: QuizResultsViewModel) {
         let completion = { [weak self] in
             guard let self = self else { return }
-            print("Пользователь нажал на кнопку, вызвано замыкание")
             self.currentQuestionIndex = 0
             self.correctAnswer = 0
             questionFactory?.requestNextQuestion()

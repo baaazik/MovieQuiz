@@ -48,7 +48,7 @@ class StatisticService: StatisticServiceProtocol {
 
     var totalAccuracy: Double {
         if totalAnswers != 0 {
-            return Double(correctAnswers) / Double(totalAnswers)
+            return Double(correctAnswers) / Double(totalAnswers) * 100
         }
         return 0
     }
@@ -84,3 +84,4 @@ class StatisticService: StatisticServiceProtocol {
     
 
 }
+
