@@ -23,18 +23,19 @@ class QuestionFactory: QuestionFactoryProtocol {
     ]
 
     weak var delegate: QuestionFactoryDelegate?
+    private var currentRoundQuestions: [QuizQuestion] = []
 
     init(delegate: QuestionFactoryDelegate) {
         self.delegate = delegate
+        self.currentRoundQuestions = questions.shuffled()
     }
 
     func requestNextQuestion() {
-        guard let index = (0..<questions.count).randomElement() else {
-            delegate?.didReceiveNextQuestion(question: nil)
-            return
+        if currentRoundQuestions.isEmpty {
+            currentRoundQuestions = questions.shuffled()
         }
 
-        let question = questions[safe: index]
-        delegate?.didReceiveNextQuestion(question: question)
+        let nextQuestion = currentRoundQuestions.removeFirst()
+        delegate?.didReceiveNextQuestion(question: nextQuestion)
     }
 }
