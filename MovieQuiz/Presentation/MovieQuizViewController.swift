@@ -123,7 +123,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
             guard let self = self else { return }
             self.currentQuestionIndex = 0
             self.correctAnswer = 0
-            questionFactory?.requestNextQuestion()
+            self.questionFactory?.requestNextQuestion()
         }
 
         let model = AlertModel(

@@ -20,10 +20,10 @@ class AlertPresenter {
 
         alert.addAction(action)
 
-        controller.present(alert, animated: true, completion: nil)
+        controller?.present(alert, animated: true, completion: nil)
     }
 
-    private let controller: UIViewController
+    weak private var controller: UIViewController?
 
     init(controller: UIViewController) {
         self.controller = controller
