@@ -19,8 +19,6 @@ class StatisticService: StatisticServiceProtocol {
 
     }
 
-    private let storage: UserDefaults = .standard
-
     var gamesCount: Int {
         get {
             storage.integer(forKey: Keys.gamesCount.rawValue)
@@ -71,6 +69,8 @@ class StatisticService: StatisticServiceProtocol {
         }
     }
 
+    private let storage: UserDefaults = .standard
+
     func store(correct count: Int, total amount: Int) {
         gamesCount += 1
         correctAnswers += count
@@ -81,7 +81,4 @@ class StatisticService: StatisticServiceProtocol {
             bestGame = currentResult
         }
     }
-    
-
 }
-

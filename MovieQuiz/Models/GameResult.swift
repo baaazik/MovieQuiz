@@ -16,4 +16,3 @@ struct GameResult {
         self.correct > other.correct
     }
 }
-

@@ -8,7 +8,6 @@
 import Foundation
 
 class QuestionFactory: QuestionFactoryProtocol {
-
     private let questions: [QuizQuestion] = [
         QuizQuestion(image: "The Godfather", text: "Рейтинг этого фильма больше чем 6?", correctAnswer: true),
         QuizQuestion(image: "The Dark Knight", text: "Рейтинг этого фильма больше чем 6?", correctAnswer: true),
@@ -22,7 +21,7 @@ class QuestionFactory: QuestionFactoryProtocol {
         QuizQuestion(image: "Vivarium", text: "Рейтинг этого фильма больше чем 6?", correctAnswer: false)
     ]
 
-    weak var delegate: QuestionFactoryDelegate?
+    weak private var delegate: QuestionFactoryDelegate?
     private var currentRoundQuestions: [QuizQuestion] = []
 
     init(delegate: QuestionFactoryDelegate) {
