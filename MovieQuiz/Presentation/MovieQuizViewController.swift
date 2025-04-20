@@ -170,7 +170,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
                 self.currentQuestionIndex = 0
                 self.correctAnswer = 0
 
-                self.questionFactory?.requestNextQuestion()
+                self.questionFactory?.loadData()
             })
 
         alertPresenter?.show(model: model)
