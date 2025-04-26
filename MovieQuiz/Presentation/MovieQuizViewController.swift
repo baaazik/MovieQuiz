@@ -46,25 +46,27 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
 
     // MARK: - QuestionFactoryDelegate
     func didReceiveNextQuestion(question: QuizQuestion?) {
+        hideLoadingIndicator()
+
         guard let question else {
             return
         }
 
         currentQuestion = question
         let viewModel = convert(model: question)
-
-        DispatchQueue.main.async { [weak self] in
-            self?.show(quiz: viewModel)
-        }
+        show(quiz: viewModel)
     }
 
     func didLoadDataFromServer() {
-        hideLoadingIndicator()
         questionFactory?.requestNextQuestion()
     }
 
     func didFailToLoadData(with error: Error) {
         showNetworkError(message: error.localizedDescription)
+    }
+
+    func didFailToLoadImage(with error: Error) {
+        showImageError()
     }
 
     // MARK: - Private Methods
@@ -170,9 +172,24 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
                 self.currentQuestionIndex = 0
                 self.correctAnswer = 0
 
+                self.showLoadingIndicator()
                 self.questionFactory?.loadData()
             })
 
+        alertPresenter?.show(model: model)
+    }
+
+    private func showImageError() {
+        hideLoadingIndicator()
+        let model = AlertModel(
+            title: "Ошибка",
+            message: "Не удалось загрузить изображение",
+            buttonText: "Попробовать ещё раз",
+            completion: { [weak self] in
+                guard let self = self else { return }
+                self.showLoadingIndicator()
+                self.questionFactory?.requestNextQuestion()
+            })
         alertPresenter?.show(model: model)
     }
 }

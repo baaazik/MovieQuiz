@@ -26,13 +26,19 @@ final class QuestionFactory: QuestionFactoryProtocol {
                 currentRoundMovies = movies.shuffled()
             }
 
-            let movie = currentRoundMovies.removeFirst()
+            let movie = currentRoundMovies.first
+            guard let movie else {
+                return
+            }
 
             var imageData = Data()
             do {
                 imageData = try Data(contentsOf: movie.resizedImageURL)
             } catch {
-                print("Failed to load image")
+                DispatchQueue.main.async {
+                    self.delegate?.didFailToLoadImage(with: error)
+                }
+                return
             }
 
             let rating = Float(movie.rating) ?? 0
@@ -43,8 +49,9 @@ final class QuestionFactory: QuestionFactoryProtocol {
                                         text: text,
                                         correctAnswer: correctAnswer)
 
-            DispatchQueue.main.async { [weak self] in
-                guard let self = self else { return }
+            currentRoundMovies.removeFirst()
+
+            DispatchQueue.main.async {
                 self.delegate?.didReceiveNextQuestion(question: question)
             }
         }
