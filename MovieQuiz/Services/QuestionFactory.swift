@@ -12,6 +12,7 @@ final class QuestionFactory: QuestionFactoryProtocol {
     weak private var delegate: QuestionFactoryDelegate?
     private var currentRoundMovies: [MostPopularMovie] = []
     private var movies: [MostPopularMovie] = []
+    private var medianRating: Float = 0
 
     init(delegate: QuestionFactoryDelegate, moviesLoader: MoviesLoading) {
         self.delegate = delegate
@@ -42,8 +43,25 @@ final class QuestionFactory: QuestionFactoryProtocol {
             }
 
             let rating = Float(movie.rating) ?? 0
-            let text = "Рейтинг этого фильма больше чем 8?"
-            let correctAnswer = rating > 8
+            var correctAnswer = false
+            var comparison = ""
+
+            /* Задаем вопросы, сравнивая с медианным значением рейтинга.
+             * Таким образом, половина фильмов имеет рейтинг меньше, половина - больше,
+             * и квиз честный
+             */
+
+            let choice = Int.random(in: 0...1)
+            if choice == 1 {
+                comparison = "больше"
+                correctAnswer = rating > medianRating
+            }
+            else {
+                comparison = "меньше"
+                correctAnswer = rating < medianRating
+            }
+
+            let text = "Рейтинг этого фильма \(comparison) чем \(medianRating)?"
 
             let question = QuizQuestion(image: imageData,
                                         text: text,
@@ -65,6 +83,7 @@ final class QuestionFactory: QuestionFactoryProtocol {
                 case .success(let mostPopularMovies):
                     self.movies = mostPopularMovies.items
                     self.currentRoundMovies = self.movies.shuffled()
+                    self.medianRating = calcMedian(movies: self.movies)
                     self.delegate?.didLoadDataFromServer()
                 case .failure(let error):
                     self.delegate?.didFailToLoadData(with: error)
