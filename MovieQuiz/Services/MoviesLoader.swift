@@ -30,7 +30,12 @@ struct MoviesLoader: MoviesLoading {
                 do {
                     let decoder = JSONDecoder()
                     let movies = try decoder.decode(MostPopularMovies.self, from: data)
-                    handler(.success(movies))
+                    if movies.errorMessage != "" {
+                        handler(.failure(AppError.apiError(movies.errorMessage)))
+                    }
+                    else {
+                        handler(.success(movies))
+                    }
                 } catch {
                     handler(.failure(error))
                 }

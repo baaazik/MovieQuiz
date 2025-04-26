@@ -9,10 +9,6 @@ import Foundation
 
 struct NetworkClient {
 
-    private enum NetworkError: Error {
-        case codeError
-    }
-
     func fetch(url: URL, handler: @escaping (Result<Data, Error>) -> Void) {
         let request = URLRequest(url: url)
 
@@ -23,12 +19,12 @@ struct NetworkClient {
             }
 
             guard let response = response as? HTTPURLResponse else {
-                handler(.failure(NetworkError.codeError))
+                handler(.failure(AppError.unknownError))
                 return
             }
 
             guard (200..<300).contains(response.statusCode) else {
-                handler(.failure(NetworkError.codeError))
+                handler(.failure(AppError.networkError(response.statusCode)))
                 return
             }
 
