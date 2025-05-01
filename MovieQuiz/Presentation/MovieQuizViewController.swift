@@ -23,6 +23,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         questionFactory = QuestionFactory(delegate: self, moviesLoader: MoviesLoader())
         alertPresenter = AlertPresenter(controller: self)
         statisticService = StatisticService()
+        presenter.viewController = self
 
         showLoadingIndicator()
         questionFactory?.loadData()
@@ -30,17 +31,13 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
 
     // MARK: - IB Actions
     @IBAction private func yesButtonClicked(_ sender: Any) {
-        guard let question = currentQuestion else {
-            return
-        }
-        showAnswerResult(isCorrect: question.correctAnswer)
+        presenter.currentQuestion = currentQuestion
+        presenter.yesButtonClicked()
     }
     
     @IBAction private func noButtonClicked(_ sender: Any) {
-        guard let question = currentQuestion else {
-            return
-        }
-        showAnswerResult(isCorrect: !question.correctAnswer)
+        presenter.currentQuestion = currentQuestion
+        presenter.noButtonClicked()
     }
 
     // MARK: - QuestionFactoryDelegate
@@ -75,7 +72,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         counterLabel.text = step.questionNumber
     }
     
-    private func showAnswerResult(isCorrect: Bool) {
+    func showAnswerResult(isCorrect: Bool) {
         imageView.layer.borderWidth = 8
         
         yesButton.isEnabled = false
