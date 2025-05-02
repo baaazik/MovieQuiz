@@ -11,8 +11,12 @@ final class MovieQuizPresenter {
     let questionsAmount: Int = 10
     weak var viewController: MovieQuizViewController?
     var currentQuestion: QuizQuestion?
+    var correctAnswer = 0
+    var questionFactory: QuestionFactoryProtocol?
+    var statisticService: StatisticServiceProtocol?
 
     private var currentQuestionIndex = 0
+    
 
 
 
@@ -48,4 +52,47 @@ final class MovieQuizPresenter {
         }
         viewController?.showAnswerResult(isCorrect: !question.correctAnswer)
     }
+
+    func didReceiveNextQuestion(question: QuizQuestion?) {
+        viewController?.hideLoadingIndicator()
+
+        guard let question else {
+            return
+        }
+
+        currentQuestion = question
+        let viewModel =  convert(model: question)
+        viewController?.show(quiz: viewModel)
+    }
+
+    func showNextQuestionOrResults() {
+        viewController?.hideBorder()
+        viewController?.enableButtons()
+
+        if self.isLastQuestion() {
+            statisticService?.store(correct: correctAnswer, total: self.questionsAmount)
+
+            var text = "Ваш результат \(correctAnswer)/\(self.questionsAmount)"
+
+            if let statisticService {
+                let bestGame = statisticService.bestGame
+                text += """
+
+Количество сыгранных квизов: \(statisticService.gamesCount)
+Рекорд: \(bestGame.correct)/\(bestGame.total) (\(bestGame.date.dateTimeString))
+Средняя точность: \(String(format: "%.2f", statisticService.totalAccuracy))%
+"""
+            }
+
+            viewController?.show(quiz: QuizResultsViewModel(
+                title: "Этот раунд окончен!",
+                text: text,
+                buttonText: "Сыграть ещё раз"))
+        } else {
+            self.switchToNextQuestion()
+            questionFactory?.requestNextQuestion()
+        }
+    }
+
 }
+
