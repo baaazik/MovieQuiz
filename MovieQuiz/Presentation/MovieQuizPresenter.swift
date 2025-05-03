@@ -9,23 +9,22 @@ import UIKit
 
 final class MovieQuizPresenter: QuestionFactoryDelegate {
     // MARK: - Public propeties
-    
-    let questionsAmount: Int = 10
-    var currentQuestion: QuizQuestion?
-    var correctAnswer = 0
-    var questionFactory: QuestionFactoryProtocol?
-    var statisticService: StatisticServiceProtocol?
 
     // MARK: - Private properties
 
+    private let questionsAmount: Int = 10
+    private var currentQuestion: QuizQuestion?
+    private var correctAnswer = 0
     private var currentQuestionIndex = 0
+    private var statisticService: StatisticServiceProtocol
+    private var questionFactory: QuestionFactoryProtocol?
     private weak var viewController: MovieQuizViewController?
 
     // MARK: - init
 
     init(viewController: MovieQuizViewController) {
         self.viewController = viewController
-
+        statisticService = StatisticService()
         questionFactory = QuestionFactory(delegate: self, moviesLoader: MoviesLoader())
         loadData()
     }
@@ -68,13 +67,11 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
     }
 
     func requestNextQuestion() {
-        // TODO: Check if needed
         viewController?.showLoadingIndicator()
         questionFactory?.requestNextQuestion()
     }
 
     func loadData() {
-        // TODO: Check if needed
         viewController?.showLoadingIndicator()
         questionFactory?.loadData()
     }
@@ -83,49 +80,14 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
         guard let question = currentQuestion else {
             return
         }
-        viewController?.showAnswerResult(isCorrect: question.correctAnswer)
+        proceedWithAnswer(isCorrect: question.correctAnswer)
     }
 
     func noButtonClicked() {
         guard let question = currentQuestion else {
             return
         }
-        viewController?.showAnswerResult(isCorrect: !question.correctAnswer)
-    }
-
-    func showNextQuestionOrResults() {
-        viewController?.hideBorder()
-        viewController?.enableButtons()
-
-        if self.isLastQuestion() {
-            statisticService?.store(correct: correctAnswer, total: self.questionsAmount)
-
-            var text = "Ваш результат \(correctAnswer)/\(self.questionsAmount)"
-
-            if let statisticService {
-                let bestGame = statisticService.bestGame
-                text += """
-
-Количество сыгранных квизов: \(statisticService.gamesCount)
-Рекорд: \(bestGame.correct)/\(bestGame.total) (\(bestGame.date.dateTimeString))
-Средняя точность: \(String(format: "%.2f", statisticService.totalAccuracy))%
-"""
-            }
-
-            viewController?.show(quiz: QuizResultsViewModel(
-                title: "Этот раунд окончен!",
-                text: text,
-                buttonText: "Сыграть ещё раз"))
-        } else {
-            self.switchToNextQuestion()
-            questionFactory?.requestNextQuestion()
-        }
-    }
-
-    func didAnswer(isCorrect: Bool) {
-        if isCorrect {
-            correctAnswer += 1
-        }
+        proceedWithAnswer(isCorrect: !question.correctAnswer)
     }
 
     // MARK: - Private Methods
@@ -134,15 +96,53 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
         currentQuestionIndex == questionsAmount - 1
     }
 
-    private func switchToNextQuestion() {
-        currentQuestionIndex += 1
-    }
-
     private func convert(model: QuizQuestion) -> QuizStepViewModel {
         QuizStepViewModel(
             image: UIImage(data: model.image) ?? UIImage(),
             question: model.text,
             questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)")
     }
+
+    private func proceedWithAnswer(isCorrect: Bool) {
+        viewController?.highlightImageBorder(isCorrectAnswer: isCorrect)
+        viewController?.disableButtons()
+
+        if isCorrect {
+            correctAnswer += 1
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            guard let self = self else { return }
+            self.proceedToNextQuestionOrResults()
+        }
+    }
+
+    private func proceedToNextQuestionOrResults() {
+        viewController?.hideBorder()
+        viewController?.enableButtons()
+
+        if self.isLastQuestion() {
+            statisticService.store(correct: correctAnswer, total: self.questionsAmount)
+
+            var text = "Ваш результат \(correctAnswer)/\(self.questionsAmount)"
+
+            let bestGame = statisticService.bestGame
+            text += """
+
+Количество сыгранных квизов: \(statisticService.gamesCount)
+Рекорд: \(bestGame.correct)/\(bestGame.total) (\(bestGame.date.dateTimeString))
+Средняя точность: \(String(format: "%.2f", statisticService.totalAccuracy))%
+"""
+
+            viewController?.show(quiz: QuizResultsViewModel(
+                title: "Этот раунд окончен!",
+                text: text,
+                buttonText: "Сыграть ещё раз"))
+        } else {
+            currentQuestionIndex += 1
+            questionFactory?.requestNextQuestion()
+        }
+    }
+
 }
 
