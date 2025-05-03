@@ -1,6 +1,6 @@
 import UIKit
 
-final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
+final class MovieQuizViewController: UIViewController {
     // MARK: - IB Outlets
     @IBOutlet weak private var imageView: UIImageView!
     @IBOutlet weak private var textLabel: UILabel!
@@ -10,22 +10,16 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     @IBOutlet weak private var activityIndicator: UIActivityIndicatorView!
     
     // MARK: - Private Properties
-    private var correctAnswer = 0
-    private var questionFactory: QuestionFactoryProtocol?
     private var alertPresenter: AlertPresenter?
     private var statisticService: StatisticServiceProtocol?
-    private let presenter = MovieQuizPresenter()
+    private var presenter: MovieQuizPresenter!
 
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        questionFactory = QuestionFactory(delegate: self, moviesLoader: MoviesLoader())
+        presenter = MovieQuizPresenter(viewController: self)
         alertPresenter = AlertPresenter(controller: self)
         statisticService = StatisticService()
-        presenter.viewController = self
-
-        showLoadingIndicator()
-        questionFactory?.loadData()
     }
 
     // MARK: - IB Actions
@@ -37,24 +31,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         presenter.noButtonClicked()
     }
 
-    // MARK: - QuestionFactoryDelegate
-    func didReceiveNextQuestion(question: QuizQuestion?) {
-        presenter.didReceiveNextQuestion(question: question)
-    }
+    // MARK: - Public Methods
 
-    func didLoadDataFromServer() {
-        questionFactory?.requestNextQuestion()
-    }
-
-    func didFailToLoadData(with error: Error) {
-        showNetworkError(message: error.localizedDescription)
-    }
-
-    func didFailToLoadImage(with error: Error) {
-        showImageError()
-    }
-
-    // MARK: - Private Methods
     func show(quiz step: QuizStepViewModel) {
         imageView.image = step.image
         textLabel.text = step.question
@@ -66,18 +44,16 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         
         yesButton.isEnabled = false
         noButton.isEnabled = false
-        
+
+        presenter.didAnswer(isCorrect: isCorrect)
         if isCorrect {
             imageView.layer.borderColor = UIColor.ypGreen.cgColor
-            correctAnswer += 1
         } else {
             imageView.layer.borderColor = UIColor.ypRed.cgColor
         }
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
             guard let self = self else { return }
-            self.presenter.correctAnswer = self.correctAnswer
-            self.presenter.questionFactory = self.questionFactory
             self.presenter.statisticService = self.statisticService
             presenter.showNextQuestionOrResults()
         }
@@ -86,9 +62,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     func show(quiz result: QuizResultsViewModel) {
         let completion = { [weak self] in
             guard let self = self else { return }
-            self.presenter.resetQuestionIndex()
-            self.correctAnswer = 0
-            self.questionFactory?.requestNextQuestion()
+            self.presenter.restartGame()
+            self.presenter.requestNextQuestion()
         }
 
         let model = AlertModel(
@@ -100,7 +75,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         alertPresenter?.show(model: model)
     }
 
-    private func showLoadingIndicator() {
+    func showLoadingIndicator() {
         activityIndicator.isHidden = false
         activityIndicator.startAnimating()
     }
@@ -110,8 +85,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         activityIndicator.stopAnimating()
     }
 
-    private func showNetworkError(message: String) {
-        hideLoadingIndicator()
+    func showNetworkError(message: String) {
         let model = AlertModel(
             title: "Ошибка",
             message: message,
@@ -119,26 +93,21 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
             completion: { [weak self] in
                 guard let self = self else { return }
 
-                self.presenter.resetQuestionIndex()
-                self.correctAnswer = 0
-
-                self.showLoadingIndicator()
-                self.questionFactory?.loadData()
+                self.presenter.restartGame()
+                self.presenter.loadData()
             })
 
         alertPresenter?.show(model: model)
     }
 
-    private func showImageError() {
-        hideLoadingIndicator()
+    func showImageError() {
         let model = AlertModel(
             title: "Ошибка",
             message: "Не удалось загрузить изображение",
             buttonText: "Попробовать ещё раз",
             completion: { [weak self] in
                 guard let self = self else { return }
-                self.showLoadingIndicator()
-                self.questionFactory?.requestNextQuestion()
+                self.presenter.requestNextQuestion()
             })
         alertPresenter?.show(model: model)
     }
