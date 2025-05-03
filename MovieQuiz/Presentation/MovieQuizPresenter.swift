@@ -18,11 +18,11 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
     private var currentQuestionIndex = 0
     private var statisticService: StatisticServiceProtocol
     private var questionFactory: QuestionFactoryProtocol?
-    private weak var viewController: MovieQuizViewController?
+    private weak var viewController: MovieQuizViewControllerProtocol?
 
     // MARK: - init
 
-    init(viewController: MovieQuizViewController) {
+    init(viewController: MovieQuizViewControllerProtocol) {
         self.viewController = viewController
         statisticService = StatisticService()
         questionFactory = QuestionFactory(delegate: self, moviesLoader: MoviesLoader())
@@ -90,17 +90,17 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
         proceedWithAnswer(isCorrect: !question.correctAnswer)
     }
 
-    // MARK: - Private Methods
-
-    private func isLastQuestion() -> Bool {
-        currentQuestionIndex == questionsAmount - 1
-    }
-
-    private func convert(model: QuizQuestion) -> QuizStepViewModel {
+    func convert(model: QuizQuestion) -> QuizStepViewModel {
         QuizStepViewModel(
             image: UIImage(data: model.image) ?? UIImage(),
             question: model.text,
             questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)")
+    }
+
+    // MARK: - Private Methods
+
+    private func isLastQuestion() -> Bool {
+        currentQuestionIndex == questionsAmount - 1
     }
 
     private func proceedWithAnswer(isCorrect: Bool) {
@@ -140,7 +140,7 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
                 buttonText: "Сыграть ещё раз"))
         } else {
             currentQuestionIndex += 1
-            questionFactory?.requestNextQuestion()
+            requestNextQuestion()
         }
     }
 
