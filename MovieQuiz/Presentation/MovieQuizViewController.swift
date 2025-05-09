@@ -11,7 +11,7 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
     
     // MARK: - Private Properties
     private var alertPresenter: AlertPresenter?
-    private var presenter: MovieQuizPresenter!
+    private var presenter: MovieQuizPresenter?
 
     // MARK: - Lifecycle
     override func viewDidLoad() {
@@ -22,11 +22,11 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
 
     // MARK: - IB Actions
     @IBAction private func yesButtonClicked(_ sender: Any) {
-        presenter.yesButtonClicked()
+        presenter?.yesButtonClicked()
     }
     
     @IBAction private func noButtonClicked(_ sender: Any) {
-        presenter.noButtonClicked()
+        presenter?.noButtonClicked()
     }
 
     // MARK: - Public Methods
@@ -40,8 +40,8 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
     func show(quiz result: QuizResultsViewModel) {
         let completion = { [weak self] in
             guard let self = self else { return }
-            self.presenter.restartGame()
-            self.presenter.requestNextQuestion()
+            self.presenter?.restartGame()
+            self.presenter?.requestNextQuestion()
         }
 
         let model = AlertModel(
@@ -71,8 +71,8 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
             completion: { [weak self] in
                 guard let self = self else { return }
 
-                self.presenter.restartGame()
-                self.presenter.loadData()
+                self.presenter?.restartGame()
+                self.presenter?.loadData()
             })
 
         alertPresenter?.show(model: model)
@@ -85,7 +85,7 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
             buttonText: "Попробовать ещё раз",
             completion: { [weak self] in
                 guard let self = self else { return }
-                self.presenter.requestNextQuestion()
+                self.presenter?.requestNextQuestion()
             })
         alertPresenter?.show(model: model)
     }

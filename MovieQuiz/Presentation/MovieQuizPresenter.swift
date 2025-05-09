@@ -8,8 +8,6 @@
 import UIKit
 
 final class MovieQuizPresenter: QuestionFactoryDelegate {
-    // MARK: - Public propeties
-
     // MARK: - Private properties
 
     private let questionsAmount: Int = 10
@@ -121,10 +119,10 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
         viewController?.hideBorder()
         viewController?.enableButtons()
 
-        if self.isLastQuestion() {
-            statisticService.store(correct: correctAnswer, total: self.questionsAmount)
+        if isLastQuestion() {
+            statisticService.store(correct: correctAnswer, total: questionsAmount)
 
-            var text = "Ваш результат \(correctAnswer)/\(self.questionsAmount)"
+            var text = "Ваш результат \(correctAnswer)/\(questionsAmount)"
 
             let bestGame = statisticService.bestGame
             text += """
